@@ -23,7 +23,11 @@ const userSchema = new mongoose.Schema({
     isActive : Boolean,
     contact_email : String ,
     contactSameEmail : Boolean
-})
+},
+{
+    timestamps : true
+}
+)
 
 //export this schema or this won't be make
 
