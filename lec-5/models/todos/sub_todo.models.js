@@ -1,34 +1,20 @@
 import mongoose from 'mongoose'
 
-//make schema
-
-const userSchema = new mongoose.Schema({
-    username :{
+const subTodoSchema = new mongoose.Schema({
+    title : {
         type : String,
-        required :true,
-        unique : true
+        required : true
     },
-    email : {
-        type: String,
-        required : [true,"email is to be given"],
-        unique: true,
-        lowercase : true
+    complete :{
+        type : Boolean,
+        default : false
+    },
+    createdBy :{
+        type : mongoose.Schema.Types.ObjectId,
+        ref : "User"
     }
-        ,
-        password:{
-            type : String,
-            required : [true,"password is required"],
-            min : [8, "password must be atleast 8 characters"]
-        },
-    isActive : Boolean,
-    contact_email : String ,
-    contactSameEmail : Boolean
-},
-{
+},{
     timestamps : true
-}
-)
+})
 
-//export this schema or this won't be make
-
-export const User = mongoose.model("User",userSchema) // kya model banana h aur kiske basis pe banana h
+export const subTodo = mongoose.model("subTodo",subTodoSchema)
