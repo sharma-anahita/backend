@@ -13,7 +13,7 @@ const userSchema = new Schema(
         password: {
             //should always be encrypted
             type: String,
-            required: [true, "Pasword is required"],  
+            required: [true, "Password is required"],  
         },
         email: {
             type: String,
@@ -55,7 +55,7 @@ const userSchema = new Schema(
 
 //for saving passwords as hashes
 userSchema.pre("save",async function (next){
-    if(!this.isModified("password")) next();
+    if(!this.isModified("password")) return next();
     this.password = await bcrypt.hash(this.password,10)
     next();
 })
@@ -66,7 +66,7 @@ userSchema.methods.checkPassword= async function (password) {
 }
 
 //giving the user a token
-userSchema.methods.generateAccessToken() = function(){
+userSchema.methods.generateAccessToken = function(){
     return jwt.sign({
         _id : this._id,
         email : this.email,
@@ -79,7 +79,7 @@ userSchema.methods.generateAccessToken() = function(){
     }
 )
 }
-userSchema.methods.generateRefreshToken()= function() {
+userSchema.methods.generateRefreshToken = function() {
     return jwt.sign({
         _id : this._id,
         email : this.email
@@ -90,4 +90,4 @@ userSchema.methods.generateRefreshToken()= function() {
     }
 )
 }
-export const User = mongoose("User", userSchema);
+export const User = mongoose.model("User", userSchema);
