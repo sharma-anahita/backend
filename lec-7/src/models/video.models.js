@@ -1,11 +1,11 @@
 import mongoose ,{Schema} from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 const videoSchema = new Schema ({
-    videoFile :{
+    videoURL :{
         type :String,
         required :true
     },
-    thumbnail :{
+    thumbnailURL :{
         type :String,
         required : true,
     },
@@ -26,7 +26,7 @@ const videoSchema = new Schema ({
     duration:{
         type :Number
     },
-    viwes:{
+    views:{
         type :Number,
         default : 0
     },
