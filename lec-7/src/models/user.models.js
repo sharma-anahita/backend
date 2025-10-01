@@ -53,4 +53,16 @@ const userSchema = new Schema(
     }
 );
 
+//for saving passwords as hashes
+userSchema.pre("save",async function (next){
+    if(!this.isModified("password")) next();
+    this.password = await bcrypt.hash(this.password,10)
+    next();
+})
+
+//for checking the passwords when they are entered
+userSchema.methods.checkPassword= async function (password) {
+    return await bcrypt.compare(password,this.password)
+}
+
 export const User = mongoose("User", userSchema);
