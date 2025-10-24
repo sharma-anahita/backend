@@ -14,7 +14,7 @@ app.use(express.urlencoded({
     extended:true,
     limit:"16kb"
 }))
-app.use(cookieParser())
+app.use(cookieParser()) //gave us two way access to cookies i.e. in request and response both
 //middlewares likhe pehle
 
 import userRouter from './routes/user.routes.js'
