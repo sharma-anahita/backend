@@ -4,7 +4,7 @@ import { ApiError } from "../utils/ApiError";
 import { asyncHandler } from "../utils/asyncHandler";
 import { User } from '../models/user.models';
 
-export const verifyJWT = asyncHandler((req, res, next) => {
+export const verifyJWT = asyncHandler((req, _, next) => {
     try {
         const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ",""); //for mobile applications use header
         if(!token) {
@@ -17,8 +17,8 @@ export const verifyJWT = asyncHandler((req, res, next) => {
             throw new ApiError(401,"Invalid Access token");
         }
         //now we have this user ,user has been verified
-        req.user = user;
-        next();
+        req.user = user; //will give req the access of user info
+        next(); //now it will run the next function or meathod to be ran
     } catch (error) {
         throw new ApiError(401,error?.message|| 
             "Invalid access token"
