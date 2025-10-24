@@ -248,7 +248,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 const changeCurrentPassword = asyncHandler(async (req,res)=>{
     //take in feilds
     const {oldPassword, newPassword} = req.body; //can add confirm password
-    const user = User.findById(req.user?.id);
+    const user = User.findById(req.user?._id);
     const isPasswordCorrect = user.checkPassword(oldPassword);
     if(!isPasswordCorrect){
 
@@ -261,4 +261,36 @@ const changeCurrentPassword = asyncHandler(async (req,res)=>{
     .status(200)
     .json(new ApiResponse(200,{},"Password Changed successfully"));
 });
-export { registerUser, loginUser, logoutUser,refreshAccessToken };
+
+const getCurrentUser = asyncHandler( async(req,res)=>{
+    return res.status(200)
+    .json(200,req.user,"current user fetched succesfully")
+});
+
+//can add functionality to update details like username
+//make different endpoints for files
+
+
+//updating text based data
+const updateAccountDetails = asyncHandler (async (req,res)=>{
+    const {fullName,email} = req.body;
+
+    if(!fullName && !email ){
+        throw new ApiError("All feilds are requiered");
+    }
+    const user =  User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set :{
+                fullName : fullName,
+                email :email
+            }
+        },
+        {new:true}
+    ).select("-password")
+    return res.status(200)
+    .json(
+        new ApiResponse(200,"Account details updated succesfully")
+    )
+});
+export { registerUser, loginUser, logoutUser,refreshAccessToken,getCurrentUser ,changeCurrentPassword};
