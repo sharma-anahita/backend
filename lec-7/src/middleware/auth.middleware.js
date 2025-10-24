@@ -1,8 +1,8 @@
 //verfies if user exists or not
 import jwt from 'jsonwebtoken'
-import { ApiError } from "../utils/ApiError";
-import { asyncHandler } from "../utils/asyncHandler";
-import { User } from '../models/user.models';
+import { ApiError } from "../utils/ApiError.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { User } from '../models/user.models.js';
 
 export const verifyJWT = asyncHandler((req, _, next) => {
     try {

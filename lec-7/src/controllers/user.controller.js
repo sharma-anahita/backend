@@ -114,7 +114,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
     //taking credentials from the user requests
     const { email, username, password } = req.body;
-    if (!username || !email) {
+    if (!username && !email) {
         throw new ApiError(400, "username or email is requiered to login");
     }
     //check existence in Db
@@ -131,12 +131,12 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 
     //make access and refresh tokens ->often used so places inside a function
-
+    
     const generateAccessAndRefreshTokens = async (userId) => {
         try {
             const user = await User.findById(userId);
-            const accessToken = await user.generateAccessToken;
-            const refreshToken = await user.generateRefreshToken;
+            const accessToken = await user.generateAccessToken();
+            const refreshToken = await user.generateRefreshToken();
 
             user.refreshToken = refreshToken;
             await user.save({ validateBeforeSave: false }); //do not validate before saving -> we dont need to
@@ -148,14 +148,13 @@ const loginUser = asyncHandler(async (req, res) => {
                 "something went wrong while generating the access and refresh tokens"
             );
         }
-    };
-    userId = user._id;
+    }; 
     const { accessToken, refreshToken } =
-        await generateAccessAndRefreshTokens(userId);
+        await generateAccessAndRefreshTokens(user._id);
 
     //send cookies
     //our user doesnt have access and refresh tokens rn, we need to get it from the Db(could be expensive you need to check that)
-    const loggedInUser = await User.findById(userId).select(
+    const loggedInUser = await User.findById(user._id).select(
         "-password -refreshToken"
     ); //we dont want to send these to the user
 
@@ -167,7 +166,7 @@ const loginUser = asyncHandler(async (req, res) => {
     return res
         .status(200)
         .cookie("accessToken", accessToken, options)
-        .cookies("refreshToken", refreshToken, options)
+        .cookie("refreshToken", refreshToken, options)
         .json(
             new ApiResponse(
                 200,
