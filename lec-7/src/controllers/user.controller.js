@@ -264,7 +264,9 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 const getCurrentUser = asyncHandler(async (req, res) => {
     return res
         .status(200)
-        .json(200, req.user, "current user fetched succesfully");
+        .json(
+            new ApiResponse(200, req.user, "current user fetched succesfully")
+        );
 });
 
 //can add functionality to update details like username
@@ -350,6 +352,78 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
         .status(200)
         .json(new ApiResponse(200, user, "Cover Image updated Succesfully"));
 });
+
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+    const { username } = req.params;
+    if (!username?.trim()) {
+        throw new ApiError(400, "usrname is missing");
+    }
+    //usrname is given
+    // const user = User.find({username}) //we will directly use match
+
+    //we user aggregatin pipeline
+    const channel = await User.aggregate([
+        {
+            $match: {
+                username: username?.toLowerCase(),
+            },
+        },
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField : "_id",
+                foreignField : "channel",
+                as :"subscribers"
+            },
+        },
+        {
+            $lookup : {
+                from :"subscriptions",
+                localField : "_id",
+                foreignField : "subscriber",
+                as :"subscribedTo"
+            }
+        },
+        {
+            $addFields:{
+                subscribersCount :{
+                    $size : "$subscribers"
+                },
+                subscribedToCount :{
+                    $size : "$subscribedTo"
+                },
+                isSubscribed :{
+                    $cond :{
+                        if : {$in : [req.user?._id,"$subscribers.subscriber"]} ,//in can lookup in arrays and objects too
+                        then  :true,
+                        else: false
+                    }
+                }
+            }
+        }, ///adds feilds
+        {
+            $project :{
+                fullName:1,
+                username:1,
+                subscribedToCount:1,
+                subscribersCount:1,
+                isSubscribed:1,
+                avatar:1,
+                coverImage:1,
+                email:1
+            }
+        }
+    ]); //returns an array
+    console.log(channel);
+    if(!channel?.length){
+        throw new ApiError(404,"Channel doens't exist");
+    }
+    return res.status(200)
+    .json(
+        new ApiResponse(200,channel[0],"User channel fetched succesfully")
+    )
+    //first value is the most important
+});
 export {
     registerUser,
     loginUser,
@@ -360,4 +434,5 @@ export {
     changeCurrentPassword,
     updateAccountDetails,
     updateUserAvatar,
+    getUserChannelProfile,
 };
