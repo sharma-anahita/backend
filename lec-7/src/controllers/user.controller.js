@@ -262,7 +262,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, {}, "Password Changed successfully"));
 });
 
-const getCurrentUser = asyncHandler(async (req, res) => {
+const getUser = asyncHandler(async (req, res) => {
     return res
         .status(200)
         .json(
@@ -288,7 +288,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
                 email: email,
             },
         },
-        { new: true }
+        { new: true } //makes sure the updated document is returned
     ).select("-password");
     return res
         .status(200)
@@ -450,8 +450,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                             localField: "owner",
                             foreignField: "_id",
                             as: "owner",
-                        },
-                        pipeline: [
+                            pipeline: [
                             {
                                 $project: {
                                     avatar: 1,
@@ -461,15 +460,18 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                             },
                             {
                                 $addFields :{
-                                    $first : "owner"
+                                    owner :{
+                                        $first : "owner"
+                                    }
                                 }
                             }
 
-                        ],
-                    },
-                ],
-            },
-        },
+                        ]
+                        }
+                    }
+                ]
+            }
+        }
     ]);
     return res.status (200)
     .json(new ApiResponse (200, user[0],"User watch history fetched successfully"))
@@ -480,9 +482,10 @@ export {
     logoutUser,
     updateUserCoverImage,
     refreshAccessToken,
-    getCurrentUser,
+    getUser,
     changeCurrentPassword,
     updateAccountDetails,
     updateUserAvatar,
     getUserChannelProfile,
+    getWatchHistory,
 };
