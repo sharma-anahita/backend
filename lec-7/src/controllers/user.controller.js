@@ -5,6 +5,7 @@ import validator from "validator";
 import { User } from "../models/user.models.js"; //calls mongoDb on ur behalf
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 //register a user -> has a lot of steps
 //get info, retreive it, save it on db, send response to user that he has been registers
@@ -371,58 +372,107 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         {
             $lookup: {
                 from: "subscriptions",
-                localField : "_id",
-                foreignField : "channel",
-                as :"subscribers"
+                localField: "_id",
+                foreignField: "channel",
+                as: "subscribers",
             },
         },
         {
-            $lookup : {
-                from :"subscriptions",
-                localField : "_id",
-                foreignField : "subscriber",
-                as :"subscribedTo"
-            }
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "subscriber",
+                as: "subscribedTo",
+            },
         },
         {
-            $addFields:{
-                subscribersCount :{
-                    $size : "$subscribers"
+            $addFields: {
+                subscribersCount: {
+                    $size: "$subscribers",
                 },
-                subscribedToCount :{
-                    $size : "$subscribedTo"
+                subscribedToCount: {
+                    $size: "$subscribedTo",
                 },
-                isSubscribed :{
-                    $cond :{
-                        if : {$in : [req.user?._id,"$subscribers.subscriber"]} ,//in can lookup in arrays and objects too
-                        then  :true,
-                        else: false
-                    }
-                }
-            }
+                isSubscribed: {
+                    $cond: {
+                        if: { $in: [req.user?._id, "$subscribers.subscriber"] }, //in can lookup in arrays and objects too
+                        then: true,
+                        else: false,
+                    },
+                },
+            },
         }, ///adds feilds
         {
-            $project :{
-                fullName:1,
-                username:1,
-                subscribedToCount:1,
-                subscribersCount:1,
-                isSubscribed:1,
-                avatar:1,
-                coverImage:1,
-                email:1
-            }
-        }
+            $project: {
+                fullName: 1,
+                username: 1,
+                subscribedToCount: 1,
+                subscribersCount: 1,
+                isSubscribed: 1,
+                avatar: 1,
+                coverImage: 1,
+                email: 1,
+            },
+        },
     ]); //returns an array
     console.log(channel);
-    if(!channel?.length){
-        throw new ApiError(404,"Channel doens't exist");
+    if (!channel?.length) {
+        throw new ApiError(404, "Channel doens't exist");
     }
-    return res.status(200)
-    .json(
-        new ApiResponse(200,channel[0],"User channel fetched succesfully")
-    )
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, channel[0], "User channel fetched succesfully")
+        );
     //first value is the most important
+});
+
+const getWatchHistory = asyncHandler(async (req, res) => {
+    const user = User.aggregate([
+        {
+            //find the user in the users collection
+            $match: {
+                _id: mongoose.Types.ObjectId(req.user._id),
+            },
+        },
+        {
+            //from ids in users watchHistory get the respective videos' documents from videos collection
+            $lookup: {
+                from: "videos",
+                localField: "watchHistory",
+                foreignField: "_id",
+                as: "watchHistory", //got the videos but videos' model has a reference to users collection
+                //i want the user details too
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: "users",
+                            localField: "owner",
+                            foreignField: "_id",
+                            as: "owner",
+                        },
+                        pipeline: [
+                            {
+                                $project: {
+                                    avatar: 1,
+                                    username: 1,
+                                    coverImage: 1,
+                                }
+                            },
+                            {
+                                $addFields :{
+                                    $first : "owner"
+                                }
+                            }
+
+                        ],
+                    },
+                ],
+            },
+        },
+    ]);
+    return res.status (200)
+    .json(new ApiResponse (200, user[0],"User watch history fetched successfully"))
 });
 export {
     registerUser,
